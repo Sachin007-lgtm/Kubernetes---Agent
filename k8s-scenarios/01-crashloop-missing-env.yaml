@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: default
+  labels:
+    app: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+      - name: payment-api
+        image: python:3.11-slim
+        command:
+        - python
+        - -c
+        - |
+          import os, sys, time
+          print("[INFO] Starting Payment Service v1.2.0...", flush=True)
+          time.sleep(1)
+          db_url = os.environ.get("DATABASE_URL")
+          if not db_url:
+              print("[FATAL] KeyError: 'DATABASE_URL' environment variable is missing!", file=sys.stderr, flush=True)
+              print("[FATAL] Cannot connect to relational persistence store. Terminating.", file=sys.stderr, flush=True)
+              sys.exit(1)
+          print(f"[INFO] Connected to {db_url}", flush=True)
+          while True:
+              time.sleep(10)
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "200m"

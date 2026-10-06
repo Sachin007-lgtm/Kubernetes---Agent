@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-worker
+  namespace: default
+  labels:
+    app: analytics-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-worker
+  template:
+    metadata:
+      labels:
+        app: analytics-worker
+    spec:
+      containers:
+      - name: memory-eater
+        image: python:3.11-slim
+        command:
+        - python
+        - -c
+        - |
+          import time
+          print("[INFO] Starting Analytics Worker...", flush=True)
+          print("[INFO] Allocating memory chunks for dataset batch...", flush=True)
+          chunks = []
+          # Intentionally allocate 40MB inside a 16Mi container limit to trigger OOMKilled
+          for i in range(40):
+              chunks.append(b"X" * (1024 * 1024))
+              print(f"[INFO] Allocated {i+1}MB", flush=True)
+              time.sleep(0.1)
+          while True:
+              time.sleep(10)
+        resources:
+          requests:
+            memory: "8Mi"
+            cpu: "50m"
+          limits:
+            memory: "16Mi"
+            cpu: "100m"
