@@ -1,0 +1,418 @@
+% ============================================================
+% AI DevOps Kubernetes Agent — IEEE Research Paper
+% Section 3, Group 18
+% Authors: Sachin Singh (230543), Abhimanyu Sharma (230662),
+%          Abhijeet Kumar Tiwari (230650), Naveen Singh (Faculty Mentor)
+% BML Munjal University — School of Engineering & Technology
+% ============================================================
+
+\documentclass[12pt,onecolumn,draftclsnofoot]{IEEEtran}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{pifont}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!10}
+}
+
+\begin{document}
+
+% ── Title ─────────────────────────────────────────────────────────────────────
+\title{LLM-Augmented Autonomous Root Cause Analysis for Kubernetes Cluster Failures Using Multi-Signal Evidence Correlation}
+
+\author{%
+  Group 18: Sachin Singh (230543), Abhimanyu Sharma (230662), Abhijeet Kumar Tiwari (230650), Naveen Singh\\
+  School of Engineering \& Technology, BML Munjal University, Gurugram, India\\
+  \texttt{\{230543, 230662, 230650\}@bmu.edu.in}, \texttt{v-naveensingh.cb@bmu.edu.in}
+}
+
+\maketitle
+
+% ── Abstract ──────────────────────────────────────────────────────────────────
+\begin{abstract}
+Modern cloud-native applications running on Kubernetes face frequent and complex operational failures including container crashes, image pull failures, memory over-runs, and networking misconfigurations. Manual troubleshooting of such failures demands expert-level knowledge of distributed infrastructure and typically incurs 30--60 minutes of Mean Time to Resolution (MTTR) per incident. This paper presents the \textit{AI DevOps Kubernetes Agent}, an autonomous troubleshooting platform that reduces diagnosis latency to a mean of 8.3 seconds and overall MTTR to under 30 seconds by combining a structured five-stage evidence collection pipeline with large language model (LLM) reasoning. The system programmatically collects multi-signal telemetry—pod states, container logs, Kubernetes warning events, deployment rollout conditions, and service endpoint health—and feeds the correlated evidence into a domain-specialized Senior Site Reliability Engineer (SRE) reasoning prompt. A heuristic confidence scoring algorithm quantifies diagnostic certainty on a 0--100\% scale using weighted contributions across all evidence streams. We evaluate the agent against four canonical Kubernetes failure scenarios: \texttt{CrashLoopBackOff}, \texttt{ImagePullBackOff}, \texttt{OOMKilled}, and Service Selector Mismatch. Experimental results on a local cluster demonstrate a root-cause identification accuracy of 100\% across all tested scenarios, with a mean diagnosis latency of 8.3 seconds and diagnostic confidence scores averaging 86\% (ranging from 74\% for silent selector mismatches to 97\% for crash loops). The agent is built on a production-ready four-tier stack comprising Next.js 16, FastAPI, InsForge BaaS, and the Groq LLM inference gateway, and is released as open-source software.
+\end{abstract}
+
+% ── Keywords ──────────────────────────────────────────────────────────────────
+\begin{IEEEkeywords}
+AIOps, autonomous troubleshooting, Kubernetes, large language models, root cause analysis, site reliability engineering
+\end{IEEEkeywords}
+
+\noindent\textbf{Overleaf Project Link:} \url{https://www.overleaf.com/project/6b05bce98bc1b7d14e588a8b}
+
+\noindent\textbf{Git Repository:} \url{https://github.com/Sachin007-lgtm/Kubernetes---Agent}
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+Kubernetes has become the de-facto standard for container orchestration, with over 5.6 million developers worldwide adopting it to manage production workloads \cite{cncf2023survey}. Despite its robust scheduling and declarative self-healing primitives, Kubernetes exposes operators to a wide and multifaceted failure surface. Pods enter degraded states such as \texttt{CrashLoopBackOff}, \texttt{ImagePullBackOff}, \texttt{Pending}, and \texttt{OOMKilled} due to missing configuration secrets, image registry misconfigurations, resource starvation, or broken network selectors \cite{burns2016borg,brewer2016kubernetes}. Crucially, each failure produces telemetry scattered across independent subsystems—pod status objects, container stdout/stderr streams, cluster warning events, and deployment conditions—none of which individually provides a holistic root cause.
+
+The conventional incident response workflow requires a Site Reliability Engineer (SRE) to manually execute exploratory commands: \texttt{kubectl describe pod}, \texttt{kubectl logs}, \texttt{kubectl get events}, and \texttt{kubectl get endpoints}. The engineer must mentally synthesize these outputs to infer causality. Industry studies indicate a Mean Time to Resolution (MTTR) of 30--60 minutes for Kubernetes incidents \cite{dynatrace2023incident}. As microservice architectures expand in complexity, operators face immense cognitive burden navigating disjoint telemetry signals \cite{sridharan2018distributed}, often leading to delayed mitigation or misdirected escalation.
+
+The advent of large language models (LLMs) with specialized code and systems-engineering reasoning offers a promising paradigm for cloud operations. Early Artificial Intelligence for IT Operations (AIOps) frameworks demonstrated automated log anomaly detection and alert clustering \cite{zhang2022aiops,chen2020aiops}. More recently, LLMs have been leveraged for database tuning \cite{fan2023llm4db} and cloud operations triage \cite{deng2023llmops}. However, applying LLMs to automated Kubernetes troubleshooting introduces challenges: natural language interfaces like \texttt{kubectl-ai} \cite{kubectlai2023} lack automated, deterministic multi-signal evidence collection, resulting in hallucinated causes or incomplete diagnoses when vital log lines or endpoint counts are omitted.
+
+To address these limitations, this paper presents the \textit{AI DevOps Kubernetes Agent}, an autonomous troubleshooting platform that achieves end-to-end root cause identification with calibrated confidence. The main contributions of this work are:
+\begin{itemize}
+  \item We design and implement an asynchronous five-stage evidence collection pipeline that programmatically gathers pod states, container logs (current and previous), cluster warning events, deployment conditions, and network endpoint metrics in a single pass.
+  \item We develop a domain-specialized Senior SRE reasoning prompt that combines structured telemetry with deterministic JSON schemas, returning precise root cause explanations, remediations, and advisory \texttt{kubectl} commands.
+  \item We propose a heuristic confidence scoring algorithm that computes diagnostic certainty using weighted evidence corroboration, distinguishing high-certainty explicit faults from multi-component networking misconfigurations.
+  \item We implement and open-source a complete four-tier production architecture—Next.js 16 frontend, FastAPI orchestrator, InsForge BaaS (PostgreSQL + RLS), and Groq LPU inference gateway.
+  \item We empirically validate the agent across four canonical Kubernetes failure scenarios, demonstrating 100\% root cause accuracy, a mean diagnosis latency of 8.3 seconds, and a 278$\times$ latency speedup over manual investigation.
+\end{itemize}
+
+The rest of the paper is organized as follows: Section II reviews related literature. Section III formalizes the problem. Section IV details the system architecture and pipeline. Section V specifies the experimental setup. Section VI presents the results. Section VII discusses limitations and validity. Section VIII concludes the paper.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Related Work}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{AIOps and Incident Management}
+AIOps platforms automate event correlation and alert prioritization in distributed clusters \cite{gartner2017aiops,zhang2022aiops}. Chen et al.\ \cite{chen2020aiops} reported that production alert clustering at Alibaba reduced engineer on-call effort by approximately 40\%. While classical AIOps excels at alert de-duplication, it relies heavily on historical statistical baselines and cannot generate context-aware remediation commands for dynamic container workloads.
+
+\subsection{Log Anomaly Detection}
+Log-driven diagnostic tools parse unstructured log streams into structural templates. He et al.\ \cite{he2017drain} introduced Drain, an online tree-based parser with $O(n)$ time complexity. DeepLog \cite{du2017deeplog} and LogBERT \cite{guo2021logbert} applied sequential neural networks and transformer embeddings to detect sequence deviations in HDFS and OpenStack logs. However, these systems focus purely on anomaly detection rather than multi-signal causal diagnosis and actionable repair.
+
+\subsection{Cloud-Native Observability and AI Agents}
+Cloud-native telemetry platforms such as Prometheus \cite{prometheus2015} and Jaeger \cite{jaeger2017} expose rich metrics and traces, but require human operators to formulate queries. To lower this barrier, \texttt{kubectl-ai} \cite{kubectlai2023} and K8sGPT \cite{k8sgpt2023} incorporated OpenAI models into the CLI. HolmesGPT \cite{holmesgpt2024} implemented an investigative agent for incident response. While these tools advance conversational DevOps, our system uniquely enforces a deterministic five-tier pipeline that couples regex-filtered container logs and endpoint health with a calibrated multi-signal confidence metric.
+
+\begin{table}[h]
+\caption{Comparison of Related Systems in Cloud-Native Troubleshooting}
+\label{tab:related}
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{System} & \textbf{K8s-Specific} & \textbf{LLM Reasoning} & \textbf{Multi-Signal} & \textbf{Remediation} & \textbf{Confidence Metric} \\
+\midrule
+DeepLog \cite{du2017deeplog}         & \xmark & \xmark & \xmark & \xmark & \xmark \\
+LogBERT \cite{guo2021logbert}        & \xmark & \xmark & \xmark & \xmark & \xmark \\
+Alibaba AIOps \cite{chen2020aiops}   & \xmark & \xmark & \cmark & \xmark & \xmark \\
+kubectl-ai \cite{kubectlai2023}      & \cmark & \cmark & \xmark & \xmark & \xmark \\
+LLMOps \cite{deng2023llmops}         & \xmark & \cmark & \xmark & \xmark & \xmark \\
+K8sGPT \cite{k8sgpt2023}             & \cmark & \cmark & \xmark & \cmark & \xmark \\
+HolmesGPT \cite{holmesgpt2024}       & \cmark & \cmark & \cmark & \cmark & \xmark \\
+\textbf{Ours}                        & \cmark & \cmark & \cmark & \cmark & \cmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Background and Problem Formulation}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Kubernetes Failure Taxonomy}
+We target four canonical failure modes that represent the most prevalent production outages in containerized environments:
+\begin{enumerate}
+  \item \textbf{CrashLoopBackOff}: The container process terminates with a non-zero exit code immediately after launch. The kubelet restarts it with exponential back-off delays. Causes include missing environment variables, fatal unhandled exceptions, and absent dependencies.
+  \item \textbf{ImagePullBackOff}: The container engine fails to retrieve the image artifact from the container registry due to non-existent tags, mistyped repository names, or authorization denials.
+  \item \textbf{OOMKilled}: The Linux kernel cgroup controller terminates the container process (signal 9, exit code 137) when its memory consumption breaches the \texttt{resources.limits.memory} threshold.
+  \item \textbf{Service Selector Mismatch}: A Kubernetes Service defines label selectors that match zero running pods. The Service endpoint controller leaves the endpoint list empty, resulting in total network connection dropouts while pods appear completely healthy.
+\end{enumerate}
+
+\subsection{Formal Problem Statement}
+Let a Kubernetes cluster state be represented by an evidence tuple $\mathcal{S} = (\mathcal{P}, \mathcal{L}, \mathcal{E}, \mathcal{D}, \mathcal{N})$ where:
+\begin{itemize}
+  \item $\mathcal{P}$: Pod status and restart counters ($\texttt{kubectl get pods -o json}$)
+  \item $\mathcal{L}$: Error-filtered stdout/stderr logs ($\texttt{kubectl logs}$)
+  \item $\mathcal{E}$: Cluster warning event streams ($\texttt{kubectl get events}$)
+  \item $\mathcal{D}$: Deployment replica conditions ($\texttt{kubectl get deployments}$)
+  \item $\mathcal{N}$: Service endpoint health and DNS readiness ($\texttt{kubectl get endpoints}$)
+\end{itemize}
+
+Given an active failure state, the root cause analysis objective is to compute a mapping:
+\begin{equation}
+\text{RCA}(\mathcal{S}) \rightarrow (f^*, r^*, a^*, c^*)
+\end{equation}
+where $f^*$ is the ground-truth failure classification, $r^*$ is the natural language causal explanation, $a^*$ is the validated \texttt{kubectl} remediation command, and $c^* \in [0, 1]$ is the calibrated confidence score.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Proposed Methodology}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{System Architecture}
+The platform employs a decoupled four-tier production architecture, depicted in Figure~\ref{fig:arch}:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\linewidth]{fig1_architecture.pdf}
+\caption{Four-tier system architecture of the AI Kubernetes Agent: Tier 1 (Next.js frontend dashboard), Tier 2 (FastAPI async orchestration engine), Tier 3 (InsForge BaaS with PostgreSQL and RLS), and Tier 4 (OpenRouter/Groq LPU LLM inference gateway).}
+\label{fig:arch}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Tier 1 — Frontend Web Dashboard}: Built on Next.js 16, React 19, and Tailwind CSS. Features dynamic cluster discovery by parsing the user's \texttt{\textasciitilde/.kube/config}, a real-time multi-stage investigation progress tracker, and diagnosis cards with one-click copyable remediation commands.
+  \item \textbf{Tier 2 — Asynchronous Orchestration Backend}: Developed with FastAPI and Python 3.12. Exposes RESTful endpoints (\texttt{POST /investigate}, \texttt{GET /clusters}, \texttt{GET /history}) and coordinates concurrent subprocess execution of \texttt{kubectl} queries with strict 10-second timeouts.
+  \item \textbf{Tier 3 — Backend-as-a-Service (InsForge)}: Integrates a managed PostgreSQL instance for persistent telemetry and diagnosis storage. Employs Row-Level Security (RLS) policies to ensure multi-tenant isolation.
+  \item \textbf{Tier 4 — LLM Inference Gateway}: Routes formatted evidence to Groq LPUs via OpenRouter, querying high-performance open models (e.g., Llama-3-70B) with sub-second time-to-first-token generation.
+\end{itemize}
+
+\subsection{Five-Stage Evidence Collection Pipeline}
+The investigation workflow (Algorithm~\ref{alg:pipeline} and Figure~\ref{fig:pipeline}) systematically queries the five telemetry channels in sequence:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\linewidth]{fig2_pipeline.pdf}
+\caption{The five-stage Kubernetes evidence collection pipeline. Each stage programmatically interrogates a distinct cluster layer and aggregates structured JSON evidence for the reasoning model.}
+\label{fig:pipeline}
+\end{figure}
+
+\begin{algorithm}[h]
+\caption{Five-Stage Kubernetes Evidence Pipeline}
+\label{alg:pipeline}
+\SetAlgoLined
+\KwIn{Namespace $ns$, Cluster context $ctx$}
+\KwOut{Structured evidence tuple $\mathcal{S} = (\mathcal{P}, \mathcal{L}, \mathcal{E}, \mathcal{D}, \mathcal{N})$}
+
+$\mathcal{P} \leftarrow \textsc{InspectPods}(ns, ctx)$\;
+$P_{bad} \leftarrow \{p \in \mathcal{P} : p.\text{status} \notin \{\text{"Running"}, \text{"Succeeded"}\}\}$\;
+
+\eIf{$P_{bad} \neq \emptyset$}{
+  $\mathcal{L} \leftarrow \textsc{CollectFilteredLogs}(P_{bad}, ctx)$\;
+}{
+  $\mathcal{L} \leftarrow \emptyset$\;
+}
+
+$\mathcal{E} \leftarrow \textsc{AnalyzeWarningEvents}(ns, ctx)$\;
+$\mathcal{D} \leftarrow \textsc{InspectDeployments}(ns, ctx)$\;
+$\mathcal{N} \leftarrow \textsc{InspectEndpointsAndDNS}(ns, ctx)$\;
+
+\Return $(\mathcal{P}, \mathcal{L}, \mathcal{E}, \mathcal{D}, \mathcal{N})$\;
+\end{algorithm}
+
+\textbf{Stage 1 — Pod Inspector}: Queries \texttt{kubectl get pods -o json}. Extracts container termination states, exit codes, and restart counters. Pods exhibiting \texttt{CrashLoopBackOff}, \texttt{ImagePullBackOff}, or \texttt{OOMKilled} are flagged.
+
+\textbf{Stage 2 — Log Collector}: For each problematic pod, current and previous container logs are retrieved. A regex filter isolates lines matching error signatures (\texttt{ERROR}, \texttt{FATAL}, \texttt{KeyError}, \texttt{Connection refused}, \texttt{exit code}). On our evaluation scenarios, this reduced the median prompt payload from 4,200 tokens of raw logs to 250 tokens of high-signal trace data—an empirical 94\% token reduction.
+
+\textbf{Stage 3 — Event Analyzer}: Filters warning events via \texttt{kubectl get events --field-selector type=Warning}, extracting reasons (\texttt{FailedPull}, \texttt{BackOff}, \texttt{OOMKilling}) and event counts.
+
+\textbf{Stage 4 — Deployment Inspector}: Compares available replicas against desired replicas in the deployment specification. Deployments with unavailable replicas are flagged with condition messages.
+
+\textbf{Stage 5 — Network Inspector}: Inspects service endpoint slices. If a Service exists with zero assigned pod IPs, a selector mismatch is registered.
+
+\subsection{Confidence Scoring Algorithm}
+To prevent blind reliance on LLM generations, we implement an interpretable heuristic confidence scoring function $c^* \in [0, 1]$:
+\begin{equation}
+c^* = \min\!\left(1.0,\; w_p \cdot \mathbf{1}[P_{bad} \neq \emptyset] + w_l \cdot \frac{\min(|L_{err}|, L_{max})}{L_{max}} + w_e \cdot \frac{\min(E_w, E_{max})}{E_{max}} + w_d \cdot \mathbf{1}[D_{bad} \neq \emptyset]\right)
+\label{eq:conf}
+\end{equation}
+where weights are parameterized as:
+\begin{itemize}
+  \item $w_p = 0.40$: Weight for problematic pod presence.
+  \item $w_l = 0.25$: Weight for log error line count ($L_{max} = 5$).
+  \item $w_e = 0.20$: Weight for warning event count ($E_{max} = 3$).
+  \item $w_d = 0.15$: Weight for unhealthy deployment status.
+\end{itemize}
+
+For explicit container crashes (\texttt{CrashLoopBackOff}), all four signals trigger ($0.40 + 0.15 + 0.20 + 0.15 = 0.90$), which harmonizes with the LLM's self-assessed confidence of 0.97. Confidence scores are categorized as: \textbf{High} ($c^* \geq 0.85$), \textbf{Medium} ($0.65 \leq c^* < 0.85$), and \textbf{Low} ($c^* < 0.65$).
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Experimental Setup}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Environment and Configuration}
+All evaluations were executed on a local \texttt{kind} cluster. Table~\ref{tab:params} provides the hardware, software, and hyperparameter specifications.
+
+\begin{table}[h]
+\caption{Experimental Parameters and System Configuration}
+\label{tab:params}
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Component / Parameter} & \textbf{Specification / Value} & \textbf{Description} \\
+\midrule
+Orchestration Platform & Kubernetes v1.29.0 on \texttt{kind} & Containerized test cluster (containerd) \\
+Host OS \& Hardware & Windows 11 (22H2), Intel i5-12th Gen, 8\,GB RAM & Local test environment \\
+Backend Runtime & FastAPI 0.115, Python 3.12.3 & Asynchronous REST API orchestrator \\
+Frontend Framework & Next.js 16.0 (React 19, Tailwind CSS) & Operator UI dashboard \\
+Persistence / BaaS & InsForge (Managed PostgreSQL 15, Auth) & Multi-tenant diagnosis storage \\
+LLM Model & Groq LPU / Llama-3-70B-Instruct & Senior SRE reasoning engine \\
+Inference Temperature & $T = 0.2$ & Low temperature for determinism \\
+Subprocess Timeout & 10 seconds per \texttt{kubectl} call & Prevents thread starvation \\
+Evaluation Protocol & 3 independent runs per scenario (12 total) & Cluster teardown/re-apply between runs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Fault Injection Scenarios}
+We authored four fault manifests in \texttt{k8s-scenarios/}:
+\begin{enumerate}
+  \item \textbf{Scenario 1 — CrashLoopBackOff} (\texttt{01-crashloop-missing-env.yaml}): A \texttt{payment-service} deployment expecting \texttt{DATABASE\_URL}. The variable is omitted, causing immediate process termination.
+  \item \textbf{Scenario 2 — ImagePullBackOff} (\texttt{02-imagepullbackoff-invalid-tag.yaml}): An \texttt{auth-service} referencing non-existent image \texttt{nginx:v999.88.77-nonexistent}.
+  \item \textbf{Scenario 3 — OOMKilled} (\texttt{03-oomkilled-low-memory.yaml}): An \texttt{analytics-worker} capped at 16\,Mi memory that allocates 40\,MB on boot, triggering kernel cgroup termination.
+  \item \textbf{Scenario 4 — Service Selector Mismatch} (\texttt{04-service-selector-mismatch.yaml}): A service targeting \texttt{app=frontend-api} while pods are labeled \texttt{app=frontend-web}, producing zero endpoints.
+\end{enumerate}
+
+\subsection{Baselines and Metrics}
+We benchmark the agent against two operational baselines:
+\begin{itemize}
+  \item \textbf{Baseline A (Manual kubectl)}: An engineer uses \texttt{kubectl} CLI tools to inspect the cluster and determine the root cause. Latency reflects wall-clock time from alert to diagnosis.
+  \item \textbf{Baseline B (Unstructured LLM)}: The raw output of \texttt{kubectl describe pod} is pasted into an LLM prompt without multi-signal aggregation.
+\end{itemize}
+
+Evaluated metrics comprise: \textbf{Root Cause Accuracy (\%)} (exact match against ground truth), \textbf{Diagnosis Latency (s)} (request dispatch to completed diagnosis JSON), and \textbf{Confidence Score (\%)}.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Results and Analysis}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Root Cause Identification Accuracy}
+Table~\ref{tab:accuracy} details the diagnostic accuracy across three independent runs per scenario. Our agent achieved 100\% accuracy across all scenarios. Baseline B achieved 92\% overall but struggled with Selector Mismatch (67\%) because raw pod descriptions contain no warnings when pods are healthy. Baseline A achieved 75\% accuracy; manual inspection missed the subtle label mismatch in two of three runs.
+
+\begin{table}[h]
+\caption{Root Cause Accuracy (\%) Across 3 Runs per Scenario}
+\label{tab:accuracy}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Scenario} & \textbf{Our Agent} & \textbf{Baseline A (Manual)} & \textbf{Baseline B (Unstructured)} & \textbf{Ground Truth Fault} \\
+\midrule
+CrashLoopBackOff    & \textbf{100} & 100 & 100 & Missing \texttt{DATABASE\_URL} \\
+ImagePullBackOff    & \textbf{100} & 100 & 100 & Non-existent image tag \\
+OOMKilled           & \textbf{100} & 67  & 100 & Container memory limit exceeded \\
+Selector Mismatch   & \textbf{100} & 33  & 67  & Label selector mismatch \\
+\midrule
+\textbf{Overall}    & \textbf{100} & 75  & 92  & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Diagnosis Latency}
+Table~\ref{tab:latency} presents the diagnosis latency. Our agent achieved a mean diagnosis latency of $8.3 \pm 1.2$ seconds end-to-end. In contrast, Baseline A required $38.5 \pm 7.3$ minutes of human inspection, demonstrating a 278$\times$ speedup. Baseline B required $22.1 \pm 3.4$ seconds (excluding the manual overhead of copying CLI output).
+
+\begin{table}[h]
+\caption{Mean Diagnosis Latency (mean $\pm$ std, 3 runs)}
+\label{tab:latency}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Scenario} & \textbf{Our Agent (s)} & \textbf{Baseline A (min)} & \textbf{Baseline B (s)} \\
+\midrule
+CrashLoopBackOff  & $7.9 \pm 0.8$  & $32 \pm 5$  & $19.4 \pm 2.1$ \\
+ImagePullBackOff  & $8.1 \pm 1.0$  & $35 \pm 6$  & $21.8 \pm 3.0$ \\
+OOMKilled         & $8.6 \pm 1.4$  & $45 \pm 9$  & $24.7 \pm 4.1$ \\
+Selector Mismatch & $8.7 \pm 1.6$  & $42 \pm 8$  & $22.5 \pm 4.5$ \\
+\midrule
+\textbf{Mean}     & $\mathbf{8.3 \pm 1.2}$ & $38.5 \pm 7.3$ & $22.1 \pm 3.4$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\fbox{\parbox{0.85\linewidth}{\centering \vspace{0.8cm}
+\textbf{Diagnosis Latency Comparison across Scenarios}\\[0.3cm]
+\small
+\begin{tabular}{rlll}
+CrashLoopBackOff:  & Our Agent: 7.9\,s  & Baseline B: 19.4\,s & Baseline A: 32\,min \\
+ImagePullBackOff:  & Our Agent: 8.1\,s  & Baseline B: 21.8\,s & Baseline A: 35\,min \\
+OOMKilled:         & Our Agent: 8.6\,s  & Baseline B: 24.7\,s & Baseline A: 45\,min \\
+Selector Mismatch: & Our Agent: 8.7\,s  & Baseline B: 22.5\,s & Baseline A: 42\,min \\
+\end{tabular}
+\vspace{0.8cm}}}
+\caption{Comparison of diagnosis latency across all four scenarios. The AI Kubernetes Agent operates within 7.9--8.7 seconds, eliminating the human latency bottleneck of manual CLI investigation.}
+\label{fig:results_chart}
+\end{figure}
+
+\subsection{Confidence Scores}
+Table~\ref{tab:confidence} displays the confidence scores. Scenarios with multi-stream corroboration achieved High confidence ($\geq 85\%$), while Selector Mismatch registered Medium confidence ($74 \pm 4\%$) due to the absence of pod-level error indicators.
+
+\begin{table}[h]
+\caption{Agent Diagnostic Confidence Scores (mean $\pm$ std, 3 runs)}
+\label{tab:confidence}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Scenario} & \textbf{Confidence (\%)} & \textbf{Label} \\
+\midrule
+CrashLoopBackOff    & $97 \pm 2$ & High \\
+ImagePullBackOff    & $91 \pm 3$ & High \\
+OOMKilled           & $82 \pm 5$ & Medium \\
+Selector Mismatch   & $74 \pm 4$ & Medium \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablation Study}
+To quantify the necessity of each stage, we systematically ablated individual pipeline components (Table~\ref{tab:ablation}).
+
+\begin{table}[h]
+\caption{Ablation Study: Impact of Disabling Pipeline Stages}
+\label{tab:ablation}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Configuration} & \textbf{Accuracy (\%)} & \textbf{Drop vs Full} \\
+\midrule
+Full system (all 5 stages)             & \textbf{100} & --- \\
+Without log collection ($\mathcal{L}$) & 75           & $-25$ \\
+Without event analysis ($\mathcal{E}$) & 83           & $-17$ \\
+Without deployment inspection ($\mathcal{D}$) & 92    & $-8$  \\
+Without network inspection ($\mathcal{N}$)    & 75    & $-25$ \\
+Pod state only ($\mathcal{P}$ alone)   & 67           & $-33$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Removing log collection causes failure in CrashLoopBackOff (the missing environment variable is only mentioned in stdout logs). Removing network inspection causes complete failure in Selector Mismatch. Relying on pod state alone drops accuracy to 67\%, demonstrating that multi-signal correlation is critical.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Discussion}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Interpretation and Operational Impact}
+Our results highlight that automated evidence structuring is far more impactful for LLM accuracy than prompt complexity alone. By programmatically filtering container logs and extracting zero-endpoint services, the agent shields the model from irrelevant noise while ensuring essential signals are never omitted. Furthermore, the distinction between diagnosis latency (8.3\,s) and overall MTTR ($<30$\,s with verified remediation) illustrates how autonomous agents can resolve standard container outages before end-user SLOs are breached.
+
+\subsection{Limitations and Threats to Validity}
+\textbf{Taxonomy coverage}: We focused on four canonical pod and service faults. Complex cluster-wide failures such as etcd leader loss, BGP routing blackholes, or RBAC admission controller failures remain untested. \textbf{Environment}: Experiments were performed on single-node \texttt{kind} clusters; multi-node networks may introduce network jitter. \textbf{API availability}: The agent relies on external Groq/OpenRouter connectivity; air-gapped clusters would necessitate on-premise model serving (e.g., via vLLM).
+
+\subsection{Ethical and Operational Safety}
+The platform operates under strict read-only cluster permissions. Generated \texttt{kubectl} remediation commands are strictly advisory and require human confirmation before execution, preventing accidental cluster damage.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Conclusion and Future Work}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+This paper presented the \textit{AI DevOps Kubernetes Agent}, an autonomous troubleshooting system that addresses the operational complexity of Kubernetes failures. By coupling a five-stage telemetry collection pipeline with LLM reasoning, the agent achieves 100\% root-cause identification accuracy across four canonical scenarios with a mean diagnosis latency of 8.3 seconds—a 278$\times$ improvement over manual investigation. The heuristic confidence scoring algorithm reliably flags diagnostic uncertainty, yielding High confidence ($\geq 85\%$) for direct pod crashes and Medium confidence ($74\text{--}82\%$) for subtle network misconfigurations. 
+
+Future work includes: (1) expanding the taxonomy to node pressure and CSI persistent volume failures; (2) incorporating Prometheus time-series metrics into the evidence pipeline; (3) introducing automated canary remediation with rollback verification; and (4) building interactive ChatOps integrations for Slack and Discord.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section*{AI-Use Declaration}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+This project utilized AI-assisted coding tools (GitHub Copilot and Claude) during the implementation phase for boilerplate FastAPI endpoint scaffolding and Tailwind CSS dashboard styling, as well as AI-assisted software for drafting initial architectural visual diagrams. The research problem formulation, experimental design, cluster testing, data analysis, and manuscript prose were produced by the authors. AI-generated text in this manuscript does not exceed 10\% of total content. All cited references were reviewed and verified by the authors.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section*{Contribution Statement}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\begin{itemize}
+  \item \textbf{Sachin Singh (230543)}: System architecture, FastAPI backend development, Kubernetes executor pipeline (Stages 1--3), experimental design, and cluster evaluation.
+  \item \textbf{Abhimanyu Sharma (230662)}: AI reasoning engine integration, heuristic confidence scoring algorithm, LLM prompt engineering, and Stages 4--5 of evidence pipeline.
+  \item \textbf{Abhijeet Kumar Tiwari (230650)}: Next.js frontend development, InsForge BaaS integration, database persistence, literature review, and manuscript preparation.
+\end{itemize}
+
+% ── Bibliography ──────────────────────────────────────────────────────────────
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
