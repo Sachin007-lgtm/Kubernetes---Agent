@@ -1,14 +1,1089 @@
 [
   {
-    "id": "inv-2a258a43",
-    "timestamp": "2026-10-06T00:53:53.797608+00:00",
+    "id": "inv-dec4e589",
+    "timestamp": "2026-11-02T07:43:18.086467+00:00",
     "cluster": "docker-desktop",
-    "namespace": "--all-namespaces",
+    "namespace": "auth",
+    "status": "success",
+    "root_cause": "Image reference in the auth-service deployment points to a non\u2011existent manifest (wrong image name or tag)",
+    "confidence": 86,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Image reference in the auth-service deployment points to a non\u2011existent manifest (wrong image name or tag)",
+      "explanation": "The pod is stuck in ImagePullBackOff because the kubelet cannot pull the container image. The event \"FailedPull\" reports \"manifest unknown\", which means the registry could not find the specified image tag. As a result the container never starts and the pod remains unready.",
+      "fix": "Update the deployment to reference a valid image tag that exists in the registry, then trigger a rollout. Verify the image is pushed and accessible before applying the change.",
+      "kubectl_command": "kubectl set image deployment/auth-service auth-service=<registry>/<repo>:<valid-tag> -n auth",
+      "prevention": "Integrate a CI step that validates the image exists in the registry before updating the deployment, and use immutable tags to avoid accidental tag mismatches.",
+      "confidence": 86,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: ImagePullBackOff",
+        "2 warning event(s) corroborate the diagnosis"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 6,
+        "problematic_pods": [
+          {
+            "name": "auth-service-5c879d749b-7pq8z",
+            "namespace": "auth",
+            "status": "ImagePullBackOff",
+            "ready": "0/1",
+            "restart_count": 0
+          }
+        ]
+      },
+      "logs": {},
+      "events": {
+        "warning_count": 2,
+        "warning_events": [
+          {
+            "reason": "FailedPull",
+            "object": "pod/auth-service-5c879d749b-7pq8z",
+            "message": "Failed to pull image: manifest unknown"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": []
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-e9f9000b",
+    "timestamp": "2026-11-02T07:42:49.380062+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "auth",
     "status": "partial",
-    "root_cause": "Investigation evidence collected (AI: OPENROUTER_API_KEY is not set. Add it to your backend/.env file.)",
+    "root_cause": "Investigation evidence collected (AI: Cannot connect to Groq. Please check internet connection.)",
     "confidence": 50,
     "confidence_label": "Medium",
     "diagnosis": null,
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 6,
+        "problematic_pods": [
+          {
+            "name": "auth-service-5c879d749b-7pq8z",
+            "namespace": "auth",
+            "status": "ImagePullBackOff",
+            "ready": "0/1",
+            "restart_count": 0
+          }
+        ]
+      },
+      "logs": {},
+      "events": {
+        "warning_count": 2,
+        "warning_events": [
+          {
+            "reason": "FailedPull",
+            "object": "pod/auth-service-5c879d749b-7pq8z",
+            "message": "Failed to pull image: manifest unknown"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": []
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": "Cannot connect to Groq. Please check internet connection."
+  },
+  {
+    "id": "inv-11b79d0f",
+    "timestamp": "2026-11-02T07:12:01.086753+00:00",
+    "cluster": "minikube",
+    "namespace": "auth",
+    "status": "success",
+    "root_cause": "Incorrect container image reference (non\u2011existent tag) in the auth-service deployment",
+    "confidence": 84,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Incorrect container image reference (non\u2011existent tag) in the auth-service deployment",
+      "explanation": "The pod is stuck in ImagePullBackOff and the event reports \"Failed to pull image: manifest unknown\", which occurs when the specified image name or tag cannot be found in the container registry. No other failures are reported, indicating the deployment spec is the source of the problem.",
+      "fix": "Update the deployment to reference a valid image tag that exists in the registry, then rollout the change.",
+      "kubectl_command": "kubectl set image deployment/auth-service auth-service=yourrepo/auth-service:correct-tag -n auth --record",
+      "prevention": "Validate image names/tags in CI pipelines and use automated checks (e.g., `docker manifest inspect`) before applying manifests to ensure the image exists.",
+      "confidence": 84,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: ImagePullBackOff",
+        "2 warning event(s) corroborate the diagnosis"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 6,
+        "problematic_pods": [
+          {
+            "name": "auth-service-5c879d749b-7pq8z",
+            "namespace": "auth",
+            "status": "ImagePullBackOff",
+            "ready": "0/1",
+            "restart_count": 0
+          }
+        ]
+      },
+      "logs": {},
+      "events": {
+        "warning_count": 2,
+        "warning_events": [
+          {
+            "reason": "FailedPull",
+            "object": "pod/auth-service-5c879d749b-7pq8z",
+            "message": "Failed to pull image: manifest unknown"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": []
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-4cdf04fc",
+    "timestamp": "2026-11-02T06:59:31.882853+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "production",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The pod logs show a fatal error and KeyError for DATABASE_URL, indicating the container cannot start without a database connection string. Because the env var is not defined, the process exits with code 1, causing CrashLoopBackOff and the deployment remains unhealthy.",
+      "fix": "Add the required DATABASE_URL environment variable to the payment-service deployment (preferably via a Secret or ConfigMap) and redeploy the pod.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db-host:5432/dbname",
+      "prevention": "Store required configuration like DATABASE_URL in a Secret/ConfigMap and enforce validation in CI/CD pipelines to ensure all mandatory env vars are present before deployment.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-84eca9ce",
+    "timestamp": "2026-11-02T06:58:17.251141+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "analytics",
+    "status": "success",
+    "root_cause": "Container exceeded its memory limit and was OOMKilled",
+    "confidence": 78,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Container exceeded its memory limit and was OOMKilled",
+      "explanation": "The pod analytics-worker-84d9f67db4-r8x9c repeatedly restarted (restartCount=4) with a status of OOMKilled, indicating the process consumed more memory than the pod's configured limit. The kubelet terminated the container to protect the node, and without logs or events the most likely cause is insufficient memory resources defined in the deployment spec.",
+      "fix": "Increase the memory request/limit for the analytics-worker deployment or optimize the workload to use less memory. Then redeploy the updated spec.",
+      "kubectl_command": "kubectl set resources deployment/analytics-worker -n analytics --requests=memory=1Gi --limits=memory=2Gi",
+      "prevention": "Establish proper resource requests/limits based on observed usage and enable monitoring/alerts for memory consumption to adjust limits before OOM occurs.",
+      "confidence": 78,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: OOMKilled",
+        "1 warning event(s) corroborate the diagnosis"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 8,
+        "problematic_pods": [
+          {
+            "name": "analytics-worker-84d9f67db4-r8x9c",
+            "namespace": "analytics",
+            "status": "OOMKilled",
+            "ready": "0/1",
+            "restart_count": 4
+          }
+        ]
+      },
+      "logs": {},
+      "events": {
+        "warning_count": 1,
+        "warning_events": []
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": []
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-bd5e22eb",
+    "timestamp": "2026-11-02T06:57:50.395502+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "production",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The pod logs show a fatal error and KeyError for DATABASE_URL, indicating the container cannot find the required database connection string. Without this env var the application exits with code 1, causing CrashLoopBackOff and the deployment to remain unhealthy.",
+      "fix": "Add the DATABASE_URL environment variable with a valid connection string to the payment-service deployment (or ConfigMap/Secret) and redeploy the pods.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db-host:5432/paymentdb",
+      "prevention": "Store required environment variables in version\u2011controlled manifests or Helm charts and validate them with CI linting or admission controllers before applying.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-88074b62",
+    "timestamp": "2026-11-02T06:57:37.235548+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "kube-system",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The payment-service container exits with code 1, logging a KeyError for DATABASE_URL. Because the required database connection string is not provided, the process terminates, causing Kubernetes to repeatedly restart the pod until it reaches CrashLoopBackOff. The deployment therefore shows 0/1 ready pods.",
+      "fix": "Add the DATABASE_URL environment variable to the payment-service deployment (via a ConfigMap or Secret) and trigger a rollout restart.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db:5432/payments && kubectl rollout restart deployment/payment-service -n production",
+      "prevention": "Validate required environment variables at build or CI time and define them in deployment manifests or Helm charts, optionally using Secrets for sensitive data. Include health checks that fail fast if configuration is incomplete.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-46fc23d9",
+    "timestamp": "2026-11-02T06:57:13.185745+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "auth",
+    "status": "success",
+    "root_cause": "Image reference in the auth-service deployment points to a non\u2011existent manifest (wrong tag or missing image)",
+    "confidence": 86,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Image reference in the auth-service deployment points to a non\u2011existent manifest (wrong tag or missing image)",
+      "explanation": "The pod is stuck in ImagePullBackOff because the kubelet cannot retrieve the image from the registry. The event \"FailedPull\" with message \"manifest unknown\" indicates that the registry could not find the requested image manifest, typically due to an incorrect image name, tag, or the image not being pushed. As a result the pod never starts and remains unready.",
+      "fix": "Update the deployment to reference a valid image tag that exists in the registry, then roll out the corrected version. Verify the image exists with a registry UI or CLI before applying.",
+      "kubectl_command": "kubectl set image deployment/auth-service auth-service=your-registry/your-repo/auth-service:latest --record -n auth",
+      "prevention": "Integrate a CI step that validates the image is successfully pushed and tagged before updating the deployment, and use immutable tags or digests to avoid accidental tag mismatches.",
+      "confidence": 86,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: ImagePullBackOff",
+        "2 warning event(s) corroborate the diagnosis"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 6,
+        "problematic_pods": [
+          {
+            "name": "auth-service-5c879d749b-7pq8z",
+            "namespace": "auth",
+            "status": "ImagePullBackOff",
+            "ready": "0/1",
+            "restart_count": 0
+          }
+        ]
+      },
+      "logs": {},
+      "events": {
+        "warning_count": 2,
+        "warning_events": [
+          {
+            "reason": "FailedPull",
+            "object": "pod/auth-service-5c879d749b-7pq8z",
+            "message": "Failed to pull image: manifest unknown"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": []
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-73bee9e5",
+    "timestamp": "2026-11-02T06:56:46.024856+00:00",
+    "cluster": "kind-dev-cluster",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The pod repeatedly crashes with a FATAL error indicating the database connection string is missing, and the logs show a KeyError for DATABASE_URL. Without this variable the application cannot establish a DB connection, causing it to exit with code 1 and enter CrashLoopBackOff. The deployment does not provide the required env var, so every replica fails on start.",
+      "fix": "Add the DATABASE_URL environment variable with a valid connection string to the payment-service deployment (or ConfigMap/Secret) and roll out the updated deployment.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db-host:5432/paymentdb",
+      "prevention": "Validate required environment variables during CI/CD pipeline checks and use ConfigMaps/Secrets with required keys, optionally adding a readiness probe that fails fast if configuration is incomplete.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-3af0b4ad",
+    "timestamp": "2026-11-02T06:56:28.123210+00:00",
+    "cluster": "minikube",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The pod repeatedly crashes with a fatal error indicating that the database connection string is missing, and the logs show a KeyError for DATABASE_URL. Without this environment variable, the application cannot establish a connection to the database, causing it to exit with code 1 and enter CrashLoopBackOff. The deployment does not provide the required env var, leading to the observed failure.",
+      "fix": "Add the DATABASE_URL environment variable to the payment-service deployment, preferably via a Kubernetes Secret or ConfigMap, and redeploy the pod.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db-host:5432/paymentdb",
+      "prevention": "Store required configuration like DATABASE_URL in a Secret and reference it in the deployment manifest; include validation checks in CI/CD pipelines to ensure all required env vars are defined before deployment.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-c344ab00",
+    "timestamp": "2026-11-02T06:55:05.965450+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The pod logs show a fatal error and a KeyError for DATABASE_URL, indicating the container cannot find the required database connection string. Without this env var the application exits with code 1, causing the CrashLoopBackOff and the deployment to remain unhealthy.",
+      "fix": "Add the DATABASE_URL environment variable to the payment-service deployment (preferably via a ConfigMap or Secret). Then rollout the updated deployment so the pods start with the correct configuration.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db-host:5432/paymentdb",
+      "prevention": "Store required configuration like DATABASE_URL in a ConfigMap/Secret and reference it in the deployment spec. Include validation checks in CI/CD pipelines to ensure all mandatory env vars are defined before applying manifests.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-a9f4ec78",
+    "timestamp": "2026-11-02T06:53:31.242350+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The pod repeatedly crashes with a fatal error indicating that the database connection string is missing, resulting in a CrashLoopBackOff. The logs show a KeyError for DATABASE_URL, and Kubernetes events report back-off restarts. Without the required environment variable, the application cannot establish a database connection and exits with code 1.",
+      "fix": "Add the DATABASE_URL environment variable to the payment-service deployment (preferably via a ConfigMap or Secret). Then rollout the updated deployment so pods start with the correct configuration.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db-host:5432/paymentdb",
+      "prevention": "Store required configuration like DATABASE_URL in a ConfigMap or Secret and reference it in the deployment spec. Include validation checks in CI/CD pipelines to ensure all mandatory env vars are defined before deployment.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-00ed5a01",
+    "timestamp": "2026-11-02T06:53:25.625623+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "analytics",
+    "status": "success",
+    "root_cause": "Container exceeded its memory limit and was OOMKilled",
+    "confidence": 75,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Container exceeded its memory limit and was OOMKilled",
+      "explanation": "The pod analytics-worker-84d9f67db4-r8x9c in the analytics namespace has been terminated with status OOMKilled and has restarted four times. No logs or warning events were captured, which is typical for OOM kills because the container is terminated before it can emit logs. This indicates the memory request/limit configured for the container is insufficient for the workload.",
+      "fix": "Increase the memory request and limit for the analytics-worker deployment (or reduce the workload's memory consumption). Apply the updated resources and redeploy the pods.",
+      "kubectl_command": "kubectl set resources deployment/analytics-worker -n analytics --requests=memory=512Mi --limits=memory=1Gi",
+      "prevention": "Monitor pod memory usage and set appropriate requests/limits based on observed consumption; enable alerts for OOMKill events to adjust resources before repeated restarts.",
+      "confidence": 75,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: OOMKilled",
+        "1 warning event(s) corroborate the diagnosis"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 8,
+        "problematic_pods": [
+          {
+            "name": "analytics-worker-84d9f67db4-r8x9c",
+            "namespace": "analytics",
+            "status": "OOMKilled",
+            "ready": "0/1",
+            "restart_count": 4
+          }
+        ]
+      },
+      "logs": {},
+      "events": {
+        "warning_count": 1,
+        "warning_events": []
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": []
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-9b5b90eb",
+    "timestamp": "2026-11-02T06:53:17.936893+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "auth",
+    "status": "success",
+    "root_cause": "Image tag specified in the pod spec does not exist in the container registry (manifest unknown)",
+    "confidence": 86,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Image tag specified in the pod spec does not exist in the container registry (manifest unknown)",
+      "explanation": "The pod 'auth-service-5c879d749b-7pq8z' is stuck in ImagePullBackOff because the kubelet cannot retrieve the image manifest from the registry. The event 'FailedPull' with message 'manifest unknown' indicates that the registry could not find the requested image tag, causing the pull to fail repeatedly.",
+      "fix": "Update the Deployment (or Pod) spec with a valid image name and tag that exists in the registry, then rollout the change. Verify the image is pushed and accessible before applying the update.",
+      "kubectl_command": "kubectl set image deployment/auth-service auth-service=<registry>/<repo>:<valid-tag> --record -n auth",
+      "prevention": "Integrate a CI step that verifies the image is successfully pushed and reachable before updating the Deployment, and use image tags that are immutable or pinned to known good versions.",
+      "confidence": 86,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: ImagePullBackOff",
+        "2 warning event(s) corroborate the diagnosis"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 6,
+        "problematic_pods": [
+          {
+            "name": "auth-service-5c879d749b-7pq8z",
+            "namespace": "auth",
+            "status": "ImagePullBackOff",
+            "ready": "0/1",
+            "restart_count": 0
+          }
+        ]
+      },
+      "logs": {},
+      "events": {
+        "warning_count": 2,
+        "warning_events": [
+          {
+            "reason": "FailedPull",
+            "object": "pod/auth-service-5c879d749b-7pq8z",
+            "message": "Failed to pull image: manifest unknown"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": []
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-0239b678",
+    "timestamp": "2026-11-02T06:53:10.474927+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "production",
+    "status": "success",
+    "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+    "confidence": 100,
+    "confidence_label": "High",
+    "diagnosis": {
+      "root_cause": "Missing DATABASE_URL environment variable in the payment-service deployment",
+      "explanation": "The payment-service container exits with code 1 because the application code aborts when the DATABASE_URL variable is not defined, as shown by the log lines \"FATAL: Database connection string missing\" and \"KeyError: DATABASE_URL\". Kubernetes repeatedly restarts the failing container, leading to a CrashLoopBackOff state and the deployment remaining unavailable.",
+      "fix": "Add the required DATABASE_URL environment variable (preferably via a Secret or ConfigMap) to the payment-service deployment and redeploy the pods.",
+      "kubectl_command": "kubectl set env deployment/payment-service -n production DATABASE_URL=postgres://user:password@db:5432/payments",
+      "prevention": "Validate required environment variables during CI/CD pipeline and use ConfigMaps/Secrets with default values or admission controllers to enforce their presence before allowing a deployment.",
+      "confidence": 100,
+      "confidence_label": "High",
+      "confidence_reasoning": [
+        "Pod state(s) clearly indicate failure: CrashLoopBackOff",
+        "Log analysis found 3 relevant error line(s)",
+        "3 warning event(s) corroborate the diagnosis",
+        "1 deployment(s) have unavailable replicas"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": false,
+        "total_pods": 12,
+        "problematic_pods": [
+          {
+            "name": "payment-service-7d8b5c469-xk9m2",
+            "namespace": "production",
+            "status": "CrashLoopBackOff",
+            "ready": "0/1",
+            "restart_count": 8
+          }
+        ]
+      },
+      "logs": {
+        "production/payment-service-7d8b5c469-xk9m2": {
+          "pod": "payment-service-7d8b5c469-xk9m2",
+          "namespace": "production",
+          "relevant_lines": [
+            "FATAL: Database connection string missing",
+            "KeyError: DATABASE_URL",
+            "Process terminated with exit code 1"
+          ]
+        }
+      },
+      "events": {
+        "warning_count": 3,
+        "warning_events": [
+          {
+            "reason": "BackOff",
+            "object": "pod/payment-service-7d8b5c469-xk9m2",
+            "message": "Back-off restarting failed container"
+          }
+        ]
+      },
+      "deployments": {
+        "unhealthy_count": 1,
+        "unhealthy_deployments": [
+          {
+            "name": "payment-service",
+            "namespace": "production",
+            "ready": 0,
+            "desired": 1
+          }
+        ]
+      },
+      "network": {
+        "issue_count": 0,
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-e7c1653b",
+    "timestamp": "2026-11-02T06:25:09.658424+00:00",
+    "cluster": "minikube",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "Insufficient diagnostic data collected (no pods, events, or deployments reported)",
+    "confidence": 60,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Insufficient diagnostic data collected (no pods, events, or deployments reported)",
+      "explanation": "The investigation output shows zero pods, deployments, and events, indicating that either the cluster has no workloads or the data collection process failed. Without resource or event information, a concrete failure cannot be identified. This lack of visibility prevents pinpointing any underlying issue.",
+      "fix": "Run comprehensive kubectl queries to list resources and events across all namespaces, and ensure the monitoring/collection tools are correctly configured. Example commands: kubectl get pods --all-namespaces, kubectl get deployments --all-namespaces, kubectl get events --all-namespaces. Verify that the cluster actually has workloads and that RBAC permissions allow the queries.",
+      "kubectl_command": "kubectl get pods --all-namespaces && kubectl get deployments --all-namespaces && kubectl get events --all-namespaces",
+      "prevention": "Automate health checks that verify data collection succeeded and alert when no resources or events are returned, ensuring early detection of collection failures.",
+      "confidence": 60,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Cluster appears healthy \u2014 no strong failure signals detected"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": null,
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "problematic_pods": [],
+        "total_pods": 0
+      },
+      "logs": {
+        "message": "No problematic pods found \u2014 skipping log collection"
+      },
+      "events": {
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "warning_events": [],
+        "total_events": 0,
+        "warning_count": 0
+      },
+      "deployments": {
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "unhealthy_deployments": [],
+        "total_deployments": 0
+      },
+      "network": {
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "services": [],
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-c6fb67a8",
+    "timestamp": "2026-11-02T06:14:41.130655+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "Insufficient data collected for diagnosis",
+    "confidence": 60,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Insufficient data collected for diagnosis",
+      "explanation": "The investigation reports zero pods, deployments, events, and logs, providing no observable symptoms or state to analyze. Without any cluster resources or events, it is impossible to pinpoint a specific failure. The lack of data suggests that the diagnostic collection process was incomplete or the cluster is empty.",
+      "fix": "Execute a comprehensive data collection run: list all namespaces, pods, deployments, services, and retrieve recent events and logs. Example commands: kubectl get all --all-namespaces, kubectl describe nodes, and kubectl logs for any running pods. Ensure monitoring agents and RBAC permissions are correctly configured to capture cluster state.",
+      "kubectl_command": "kubectl get all --all-namespaces",
+      "prevention": "Automate regular health checks and data collection scripts with proper RBAC to guarantee visibility into cluster resources before incidents occur.",
+      "confidence": 60,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Cluster appears healthy \u2014 no strong failure signals detected"
+      ],
+      "provider": "Groq LPU"
+    },
     "investigation": {
       "pods": {
         "healthy": null,
@@ -36,18 +1111,234 @@
         "issues": []
       }
     },
-    "ai_error": "OPENROUTER_API_KEY is not set. Add it to your backend/.env file."
+    "ai_error": null
   },
   {
-    "id": "inv-44da13d2",
-    "timestamp": "2026-10-06T00:48:51.532181+00:00",
-    "cluster": "docker-desktop",
-    "namespace": "default",
+    "id": "inv-ba716dbe",
+    "timestamp": "2026-11-02T06:14:08.722885+00:00",
+    "cluster": "kind-dev-cluster",
+    "namespace": "--all-namespaces",
     "status": "success",
-    "root_cause": "No critical issues detected (Cluster healthy)",
-    "confidence": 100,
-    "confidence_label": "High",
-    "diagnosis": null,
+    "root_cause": "Investigation collected no resources because the cluster has no workloads or the data collection was misconfigured",
+    "confidence": 60,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Investigation collected no resources because the cluster has no workloads or the data collection was misconfigured",
+      "explanation": "All sections report zero pods, deployments, and events, and health fields are unknown. This indicates either the cluster is empty (no workloads deployed) or the diagnostic tool lacked permissions or correct namespace scope to gather data. Without any objects, no failures can be identified.",
+      "fix": "Verify that workloads exist by listing resources across all namespaces. If workloads are expected, ensure the diagnostic tool has appropriate RBAC permissions and is targeting the correct namespaces. Deploy the necessary pods/deployments if the cluster is intentionally empty.",
+      "kubectl_command": "kubectl get all --all-namespaces",
+      "prevention": "Configure monitoring and diagnostic scripts with proper RBAC and namespace scopes, and regularly validate that expected workloads are present.",
+      "confidence": 60,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Cluster appears healthy \u2014 no strong failure signals detected"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": null,
+        "error": "Error in configuration: context was not found for specified context: kind-dev-cluster\n",
+        "problematic_pods": [],
+        "total_pods": 0
+      },
+      "logs": {
+        "message": "No problematic pods found \u2014 skipping log collection"
+      },
+      "events": {
+        "error": "Error in configuration: context was not found for specified context: kind-dev-cluster\n",
+        "warning_events": [],
+        "total_events": 0,
+        "warning_count": 0
+      },
+      "deployments": {
+        "error": "Error in configuration: context was not found for specified context: kind-dev-cluster\n",
+        "unhealthy_deployments": [],
+        "total_deployments": 0
+      },
+      "network": {
+        "error": "Error in configuration: context was not found for specified context: kind-dev-cluster\n",
+        "services": [],
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-b1c29d1a",
+    "timestamp": "2026-11-02T06:13:29.325470+00:00",
+    "cluster": "minikube",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "No data collected for analysis",
+    "confidence": 60,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "No data collected for analysis",
+      "explanation": "The investigation output contains zero pods, deployments, events, and networking information, indicating that the data collection step did not retrieve any cluster state. Without resource metrics or logs, a concrete failure cannot be identified.",
+      "fix": "Re-run the investigation with proper access to the cluster context and ensure that the data collection scripts target the correct namespaces and resources. Verify kubeconfig permissions and that the cluster API endpoint is reachable.",
+      "kubectl_command": null,
+      "prevention": "Automate regular health checks and data collection pipelines that validate successful retrieval of pods, events, and deployments before analysis.",
+      "confidence": 60,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Cluster appears healthy \u2014 no strong failure signals detected"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": null,
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "problematic_pods": [],
+        "total_pods": 0
+      },
+      "logs": {
+        "message": "No problematic pods found \u2014 skipping log collection"
+      },
+      "events": {
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "warning_events": [],
+        "total_events": 0,
+        "warning_count": 0
+      },
+      "deployments": {
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "unhealthy_deployments": [],
+        "total_deployments": 0
+      },
+      "network": {
+        "error": "Error in configuration: context was not found for specified context: minikube\n",
+        "services": [],
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-7a785f1e",
+    "timestamp": "2026-11-01T19:26:45.332581+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "--all-namespaces",
+    "status": "success",
+    "root_cause": "Insufficient diagnostic data collected",
+    "confidence": 60,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Insufficient diagnostic data collected",
+      "explanation": "The investigation returned no pods, events, logs, or deployment information, making it impossible to identify any failure. Without resources to inspect, the system appears idle but may simply lack data collection.",
+      "fix": "Run comprehensive data collection commands (e.g., kubectl get pods, services, deployments across all namespaces, and describe them) and ensure monitoring agents are deployed.",
+      "kubectl_command": "kubectl get pods --all-namespaces -o wide && kubectl get deployments --all-namespaces && kubectl get events --all-namespaces",
+      "prevention": "Implement automated health checks and ensure logging/monitoring agents are installed on all nodes to capture cluster state continuously.",
+      "confidence": 60,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Cluster appears healthy \u2014 no strong failure signals detected"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": null,
+        "error": "Error in configuration: context was not found for specified context: docker-desktop\n",
+        "problematic_pods": [],
+        "total_pods": 0
+      },
+      "logs": {
+        "message": "No problematic pods found \u2014 skipping log collection"
+      },
+      "events": {
+        "error": "Error in configuration: context was not found for specified context: docker-desktop\n",
+        "warning_events": [],
+        "total_events": 0,
+        "warning_count": 0
+      },
+      "deployments": {
+        "error": "Error in configuration: context was not found for specified context: docker-desktop\n",
+        "unhealthy_deployments": [],
+        "total_deployments": 0
+      },
+      "network": {
+        "error": "Error in configuration: context was not found for specified context: docker-desktop\n",
+        "services": [],
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-3b6fdb33",
+    "timestamp": "2026-11-01T19:23:20.378869+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "kube-system",
+    "status": "success",
+    "root_cause": "Insufficient data collected to identify any issue",
+    "confidence": 60,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "Insufficient data collected to identify any issue",
+      "explanation": "The investigation shows zero pods, deployments, events, and logs, indicating that no workload or diagnostic information was gathered. Without any resource state or error messages, a concrete failure cannot be pinpointed. This typically results from an incomplete data collection step or an empty namespace.",
+      "fix": "Run comprehensive data collection commands to retrieve pod, deployment, service, and event information across all namespaces. Verify that monitoring and logging agents are correctly deployed and that the correct namespace/context is targeted.",
+      "kubectl_command": "kubectl get all --all-namespaces -o wide && kubectl get events --all-namespaces",
+      "prevention": "Automate health checks and ensure that diagnostic scripts always capture pod logs, events, and resource statuses before analysis.",
+      "confidence": 60,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Cluster appears healthy \u2014 no strong failure signals detected"
+      ],
+      "provider": "Groq LPU"
+    },
+    "investigation": {
+      "pods": {
+        "healthy": null,
+        "error": "error: context \"docker-desktop\" does not exist\n",
+        "problematic_pods": [],
+        "total_pods": 0
+      },
+      "logs": {
+        "message": "No problematic pods found \u2014 skipping log collection"
+      },
+      "events": {
+        "error": "error: context \"docker-desktop\" does not exist\n",
+        "warning_events": [],
+        "total_events": 0,
+        "warning_count": 0
+      },
+      "deployments": {
+        "error": "error: context \"docker-desktop\" does not exist\n",
+        "unhealthy_deployments": [],
+        "total_deployments": 0
+      },
+      "network": {
+        "error": "error: context \"docker-desktop\" does not exist\n",
+        "services": [],
+        "issues": []
+      }
+    },
+    "ai_error": null
+  },
+  {
+    "id": "inv-1e15fbbd",
+    "timestamp": "2026-11-01T19:22:59.794189+00:00",
+    "cluster": "docker-desktop",
+    "namespace": "analytics",
+    "status": "success",
+    "root_cause": "No issues detected",
+    "confidence": 60,
+    "confidence_label": "Medium",
+    "diagnosis": {
+      "root_cause": "No issues detected",
+      "explanation": "The investigation data shows no pods, events, deployments, or logs to analyze, and there are no warning or error events reported. With no resources present, there is nothing indicating a failure in the cluster at this time.",
+      "fix": "No remediation required. Verify that monitoring and data collection tools are correctly configured to capture cluster resources for future investigations.",
+      "kubectl_command": null,
+      "prevention": "Implement continuous health checks and ensure that logging and event collection are enabled for all namespaces to detect issues promptly.",
+      "confidence": 60,
+      "confidence_label": "Medium",
+      "confidence_reasoning": [
+        "Cluster appears healthy \u2014 no strong failure signals detected"
+      ],
+      "provider": "Groq LPU"
+    },
     "investigation": {
       "pods": {
         "healthy": null,

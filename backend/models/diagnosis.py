@@ -11,3 +11,4 @@ class DiagnosisResult(BaseModel):
     confidence: int           # 0–100
     confidence_label: str     # "High" | "Medium" | "Low"
     confidence_reasoning: List[str] = []
+    provider: Optional[str] = "Groq LPU"

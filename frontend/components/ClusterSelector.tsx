@@ -61,7 +61,7 @@ export default function ClusterSelector({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={switching || loading}
-        className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 hover:bg-zinc-50 dark:hover:bg-zinc-850 text-xs font-medium text-zinc-700 dark:text-zinc-200 transition-all shadow-sm cursor-pointer"
+        className="flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 transition-all shadow-sm cursor-pointer"
         id="cluster-selector-btn"
         title="Switch active Kubernetes cluster context"
       >
@@ -73,11 +73,11 @@ export default function ClusterSelector({
                 : 'bg-amber-400'
             }`}
           />
-          <span className="text-zinc-400 dark:text-zinc-500 text-[11px] uppercase tracking-wider">
+          <span className="text-zinc-400 text-[11px] uppercase tracking-wider">
             Cluster:
           </span>
-          <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-            {current ? current.name : loading ? 'Detecting clusters...' : 'Select Cluster'}
+          <span className="font-semibold text-zinc-900">
+            {current ? current.name : loading ? 'Detecting...' : 'Select Cluster'}
           </span>
         </span>
         <svg
@@ -96,8 +96,8 @@ export default function ClusterSelector({
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute left-0 mt-2 w-72 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl z-50 p-2 space-y-1">
-            <div className="px-2.5 py-1.5 border-b border-zinc-100 dark:border-zinc-800 mb-1">
+          <div className="absolute left-0 mt-2 w-72 rounded-3xl border border-zinc-200/80 bg-white shadow-xl z-50 p-2 space-y-1 overflow-hidden">
+            <div className="px-3 py-2 border-b border-zinc-100 mb-1">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
                 Discovered in ~/.kube/config
               </p>
@@ -109,10 +109,10 @@ export default function ClusterSelector({
                 <button
                   key={cluster.name}
                   onClick={() => handleSelect(cluster)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  className={`w-full text-left px-3 py-2 rounded-2xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold'
-                      : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                      ? 'bg-zinc-100 text-zinc-900 font-semibold'
+                      : 'hover:bg-zinc-50 text-zinc-700'
                   }`}
                 >
                   <div className="flex flex-col">
@@ -124,7 +124,7 @@ export default function ClusterSelector({
                       />
                       <span>{cluster.name}</span>
                       {cluster.is_mock && (
-                        <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                        <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
                           Preset
                         </span>
                       )}
@@ -136,7 +136,7 @@ export default function ClusterSelector({
                     )}
                   </div>
                   {isSelected && (
-                    <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
                   )}
@@ -144,10 +144,10 @@ export default function ClusterSelector({
               );
             })}
 
-            <div className="pt-1.5 border-t border-zinc-100 dark:border-zinc-800 px-2 py-1">
+            <div className="pt-1.5 border-t border-zinc-100 px-3 py-1.5">
               <button
                 onClick={loadClusters}
-                className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-[10px] text-zinc-500 hover:text-zinc-900 flex items-center gap-1 cursor-pointer transition-colors"
               >
                 ↻ Refresh clusters from kubeconfig
               </button>

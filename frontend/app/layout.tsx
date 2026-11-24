@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'AI Kubernetes Agent - Troubleshoot Kubernetes with AI',
-  description: 'On-demand AI-powered Kubernetes troubleshooting platform',
+  title: 'AI Kubernetes Agent — Senior SRE Copilot',
+  description: 'AI-powered autonomous Kubernetes troubleshooting and incident response platform',
 };
 
 export default function RootLayout({
@@ -28,7 +28,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans">
+      {/*
+        body has NO bg class — globals.css sets the outer lavender gradient.
+        The white rounded card wraps the actual product inside page.tsx.
+      */}
+      <body className="min-h-full font-sans">
         <Providers>
           {children}
         </Providers>

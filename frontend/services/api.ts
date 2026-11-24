@@ -70,10 +70,32 @@ export const switchCluster = async (context: string): Promise<{ success: boolean
   return response.data;
 };
 
+import { insforge } from '@/lib/insforge';
+
 /**
- * Fetch investigation history
+ * Fetch investigation history (uses InsForge BaaS with FastAPI fallback)
  */
 export const fetchHistory = async (limit: number = 20): Promise<HistoryResponse> => {
+  try {
+    const { data, error } = await insforge.database
+      .from('investigations')
+      .select()
+      .limit(limit);
+
+    if (!error && data && data.length > 0) {
+      const sorted = (data as InvestigationRecord[]).sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      return {
+        status: 'success',
+        total: sorted.length,
+        investigations: sorted,
+      };
+    }
+  } catch (err) {
+    console.warn('InsForge direct query fallback to FastAPI backend:', err);
+  }
+
   const response = await apiClient.get<HistoryResponse>(`/history?limit=${limit}`);
   return response.data;
 };
@@ -84,6 +106,22 @@ export const fetchHistory = async (limit: number = 20): Promise<HistoryResponse>
 export const fetchInvestigationDetail = async (
   id: string,
 ): Promise<{ status: string; investigation: InvestigationRecord }> => {
+  try {
+    const { data, error } = await insforge.database
+      .from('investigations')
+      .select()
+      .eq('id', id);
+
+    if (!error && data && data.length > 0) {
+      return {
+        status: 'success',
+        investigation: data[0] as InvestigationRecord,
+      };
+    }
+  } catch (err) {
+    console.warn('InsForge direct query fallback for detail:', err);
+  }
+
   const response = await apiClient.get(`/history/${id}`);
   return response.data;
 };
@@ -92,6 +130,12 @@ export const fetchInvestigationDetail = async (
  * Reset investigation history
  */
 export const resetHistory = async (): Promise<{ status: string; message: string }> => {
+  try {
+    await insforge.database.from('investigations').delete().neq('id', 'keep-all');
+  } catch (err) {
+    console.warn('InsForge delete fallback:', err);
+  }
+
   const response = await apiClient.delete('/history');
   return response.data;
 };

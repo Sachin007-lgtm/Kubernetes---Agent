@@ -11,12 +11,12 @@ import { fetchCurrentUser, logoutUser } from '@/services/api';
 
 export default function Home() {
   const [selectedCluster, setSelectedCluster] = useState<string>('docker-desktop');
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [user, setUser]                         = useState<UserProfile | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen]   = useState<boolean>(false);
   const [activeInvestigation, setActiveInvestigation] = useState<InvestigationRecord | null>(null);
-  const [historyKey, setHistoryKey] = useState<number>(0);
+  const [historyKey, setHistoryKey]             = useState<number>(0);
 
-  // Load existing session or default SRE profile on mount
+  // Load existing session on mount
   useEffect(() => {
     initAuth();
   }, []);
@@ -27,7 +27,6 @@ export default function Home() {
       if (stored) {
         setUser(JSON.parse(stored));
       } else {
-        // Fetch current user from backend (returns demo profile)
         const res = await fetchCurrentUser();
         if (res.authenticated && res.user) {
           setUser(res.user);
@@ -38,7 +37,6 @@ export default function Home() {
         }
       }
     } catch {
-      // Default fallback
       setUser({
         id: 'usr-sre-01',
         name: 'Alex Mercer',
@@ -56,80 +54,92 @@ export default function Home() {
 
   const handleSelectInvestigation = (record: InvestigationRecord) => {
     setActiveInvestigation(record);
-    // Smooth scroll to investigation results
     window.scrollTo({ top: 350, behavior: 'smooth' });
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
-      {/* Navbar with Cluster Selector & User Info */}
-      <Navbar
-        user={user}
-        onOpenLogin={() => setIsAuthModalOpen(true)}
-        onLogout={handleLogout}
-        selectedCluster={selectedCluster}
-        onClusterChange={(cluster) => setSelectedCluster(cluster)}
-      />
+    /*
+      ── Outer wrapper: lavender/lilac gradient comes from body via globals.css.
+         The product lives inside a white rounded-[36px] card, exactly like
+         the video's "browser chrome" presentation.
+    */
+    <div className="min-h-screen py-4 sm:py-8 px-2 sm:px-6 flex flex-col items-center justify-start">
+      {/* ── White rounded product card ──────────────────────────────────────── */}
+      <div className="w-full max-w-[1280px] bg-white rounded-[28px] sm:rounded-[40px] shadow-2xl shadow-indigo-950/10 border border-white/70 overflow-hidden flex flex-col">
 
-      <main className="flex-1 flex flex-col items-center px-4 py-12">
-        <div className="w-full max-w-4xl flex flex-col items-center gap-8">
-          {/* Header Tag & Subtitle */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-900/60 shadow-sm">
-            <span>☸</span>
-            <span>Intelligent SRE Incident Response</span>
-          </div>
+        {/* ── Navigation bar ──────────────────────────────────────────────── */}
+        <Navbar
+          user={user}
+          onOpenLogin={() => setIsAuthModalOpen(true)}
+          onLogout={handleLogout}
+          selectedCluster={selectedCluster}
+          onClusterChange={(cluster) => setSelectedCluster(cluster)}
+        />
 
-          <div className="space-y-3 text-center">
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-              AI Kubernetes Agent
-            </h1>
-            <p className="text-lg sm:text-xl font-normal text-zinc-600 dark:text-zinc-400 max-w-2xl">
-              Correlate Pod Failures, Container Logs, and Kubernetes Events with AI reasoning to pinpoint root causes and recommend actionable kubectl fixes.
-            </p>
-          </div>
+        {/* ── Hero / Header Banner ─────────────────────────────────────────── */}
+        <div className="px-6 sm:px-12 pt-10 sm:pt-14 pb-8 sm:pb-10 border-b border-zinc-100">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            {/* Left: Title + sub-label */}
+            <div className="space-y-3">
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-zinc-400 uppercase">
+                INNOVATION AT EVERY TURN
+              </p>
+              <h1 className="text-3xl sm:text-4xl font-normal tracking-tight text-zinc-900 leading-[1.1]">
+                AI Kubernetes Agent
+              </h1>
+              <p className="text-sm text-zinc-500 max-w-xl leading-relaxed">
+                Correlate Pod Failures, Container Logs, and Kubernetes Events with AI reasoning to pinpoint root causes and recommend actionable kubectl fixes.
+              </p>
+            </div>
 
-          {/* Cluster & Backend Status Badges */}
-          <div className="flex items-center gap-3 flex-wrap justify-center">
-            <StatusBadge />
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-zinc-400">Target:</span>
-              <strong className="text-zinc-800 dark:text-zinc-200">{selectedCluster}</strong>
+            {/* Right: Status badges */}
+            <div className="flex flex-wrap items-center gap-3">
+              <StatusBadge />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border border-zinc-200 bg-zinc-50 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                <span className="text-zinc-400">Target:</span>
+                <strong className="text-zinc-800">{selectedCluster}</strong>
+              </div>
             </div>
           </div>
-
-          {/* Main Investigation CTA & Progress & AI Diagnosis */}
-          <div className="w-full flex flex-col items-center gap-6 pt-2">
-            <InvestigateButton
-              selectedCluster={selectedCluster}
-              isAuthenticated={!!user}
-              onOpenLogin={() => setIsAuthModalOpen(true)}
-              externalInvestigation={activeInvestigation}
-              onInvestigationFinished={() => setHistoryKey((k) => k + 1)}
-            />
-          </div>
-
-          {/* Investigation History Panel (Prompt 04 Requirements) */}
-          <div className="w-full pt-4">
-            <InvestigationHistory
-              key={historyKey}
-              onSelectInvestigation={handleSelectInvestigation}
-              activeInvestigationId={activeInvestigation?.id}
-            />
-          </div>
         </div>
-      </main>
 
-      {/* Auth Modal */}
+        {/* ── Main product content ─────────────────────────────────────────── */}
+        <main className="flex-1 px-4 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-10">
+
+          {/* Investigation trigger + real-time progress + results + diagnosis */}
+          <InvestigateButton
+            selectedCluster={selectedCluster}
+            isAuthenticated={!!user}
+            onOpenLogin={() => setIsAuthModalOpen(true)}
+            externalInvestigation={activeInvestigation}
+            onInvestigationFinished={() => setHistoryKey((k) => k + 1)}
+          />
+
+          {/* Past investigations sidebar-style panel */}
+          <InvestigationHistory
+            key={historyKey}
+            onSelectInvestigation={handleSelectInvestigation}
+            activeInvestigationId={activeInvestigation?.id}
+          />
+        </main>
+
+        {/* ── Footer strip ─────────────────────────────────────────────────── */}
+        <footer className="px-6 sm:px-12 py-5 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-3 text-[11px] text-zinc-400">
+          <span>AI Kubernetes Agent • Senior SRE Copilot</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Powered by Groq LPU &amp; OpenRouter</span>
+          </div>
+        </footer>
+      </div>
+
+      {/* ── Auth Modal ───────────────────────────────────────────────────────── */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        onLoginSuccess={(loggedInUser) => setUser(loggedInUser)}
+        onLoginSuccess={(u: UserProfile) => setUser(u)}
       />
-
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 py-6 text-center text-xs text-zinc-500 bg-white/50 dark:bg-zinc-900/50">
-        AI DevOps Kubernetes Agent • Production-grade Automated Troubleshooting Engine
-      </footer>
     </div>
   );
 }

@@ -81,6 +81,7 @@ export interface DiagnosisResult {
   confidence: number;
   confidence_label: 'High' | 'Medium' | 'Low';
   confidence_reasoning: string[];
+  provider?: string;
 }
 
 export interface InvestigateResponse {
