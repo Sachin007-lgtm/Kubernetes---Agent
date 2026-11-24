@@ -1,0 +1,7 @@
+configuration,accuracy_percent,successful_runs,total_runs,accuracy_drop_percent,notes
+Full system (all 5 stages),100.0,12,12,0.0,All 4 scenarios correctly diagnosed across 3 runs
+Without log collection (Stage 2),75.0,9,12,-25.0,Fails on CrashLoopBackOff (DATABASE_URL only in stdout logs)
+Without event analysis (Stage 3),83.3,10,12,-16.7,Fails on ambiguous ImagePullBackOff / OOMKilled edge cases
+Without deployment inspection (Stage 4),91.7,11,12,-8.3,Misses replica disparity indicators
+Without network inspection (Stage 5),75.0,9,12,-25.0,Fails on Service Selector Mismatch (zero endpoints)
+Pod state only (Stage 1 alone),66.7,8,12,-33.3,Fails exact cause of CrashLoopBackOff and Selector Mismatch

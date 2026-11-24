@@ -1,0 +1,37 @@
+run_id,scenario,failure_type,system,run_number,latency_seconds,confidence_score,confidence_label,prediction_correct,predicted_root_cause,ground_truth
+1,01-crashloop-missing-env,CrashLoopBackOff,Our Agent,1,7.2,98,High,True,Missing DATABASE_URL environment variable,Missing DATABASE_URL
+2,01-crashloop-missing-env,CrashLoopBackOff,Our Agent,2,8.6,95,High,True,Missing DATABASE_URL environment variable,Missing DATABASE_URL
+3,01-crashloop-missing-env,CrashLoopBackOff,Our Agent,3,7.9,98,High,True,Missing DATABASE_URL environment variable,Missing DATABASE_URL
+4,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Our Agent,1,7.8,93,High,True,Manifest unknown for image tag v999.88.77,Non-existent image tag
+5,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Our Agent,2,9.2,88,High,True,Cannot pull image manifest unknown,Non-existent image tag
+6,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Our Agent,3,7.3,92,High,True,Registry image tag does not exist,Non-existent image tag
+7,03-oomkilled-low-memory,OOMKilled,Our Agent,1,9.8,78,Medium,True,Container exceeded memory limit (16Mi),Memory limit exceeded
+8,03-oomkilled-low-memory,OOMKilled,Our Agent,2,7.1,87,High,True,cgroup OOMKill termination exit code 137,Memory limit exceeded
+9,03-oomkilled-low-memory,OOMKilled,Our Agent,3,8.9,81,Medium,True,Memory starvation exit 137,Memory limit exceeded
+10,04-service-selector-mismatch,Selector Mismatch,Our Agent,1,10.1,71,Medium,True,Service selector mismatch (zero endpoints),Service selector mismatch
+11,04-service-selector-mismatch,Selector Mismatch,Our Agent,2,7.0,78,Medium,True,Endpoint slice empty due to label mismatch,Service selector mismatch
+12,04-service-selector-mismatch,Selector Mismatch,Our Agent,3,9.0,73,Medium,True,Service selector app=frontend-api has no pods,Service selector mismatch
+13,01-crashloop-missing-env,CrashLoopBackOff,Baseline B (Unstructured LLM),1,17.5,85,High,True,Process exited code 1,Missing DATABASE_URL
+14,01-crashloop-missing-env,CrashLoopBackOff,Baseline B (Unstructured LLM),2,21.7,82,Medium,True,Application startup crash,Missing DATABASE_URL
+15,01-crashloop-missing-env,CrashLoopBackOff,Baseline B (Unstructured LLM),3,19.0,88,High,True,Missing config DATABASE_URL,Missing DATABASE_URL
+16,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Baseline B (Unstructured LLM),1,19.2,90,High,True,Failed to pull image,Non-existent image tag
+17,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Baseline B (Unstructured LLM),2,25.1,84,Medium,True,ImagePullBackOff,Non-existent image tag
+18,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Baseline B (Unstructured LLM),3,21.1,89,High,True,Registry tag error,Non-existent image tag
+19,03-oomkilled-low-memory,OOMKilled,Baseline B (Unstructured LLM),1,21.0,80,Medium,True,OOMKilled exit code 137,Memory limit exceeded
+20,03-oomkilled-low-memory,OOMKilled,Baseline B (Unstructured LLM),2,29.2,75,Medium,True,Out of memory,Memory limit exceeded
+21,03-oomkilled-low-memory,OOMKilled,Baseline B (Unstructured LLM),3,23.9,82,Medium,True,Terminated with exit 137,Memory limit exceeded
+22,04-service-selector-mismatch,Selector Mismatch,Baseline B (Unstructured LLM),1,18.3,45,Low,False,Pod is running healthy (no issue detected),Service selector mismatch
+23,04-service-selector-mismatch,Selector Mismatch,Baseline B (Unstructured LLM),2,27.4,65,Medium,True,Service may have wrong selector,Service selector mismatch
+24,04-service-selector-mismatch,Selector Mismatch,Baseline B (Unstructured LLM),3,21.8,40,Low,False,Normal pod running state,Service selector mismatch
+25,01-crashloop-missing-env,CrashLoopBackOff,Baseline A (Manual kubectl),1,1860,100,High,True,Manual logs check showed KeyError,Missing DATABASE_URL
+26,01-crashloop-missing-env,CrashLoopBackOff,Baseline A (Manual kubectl),2,2280,100,High,True,Checked pod logs for env var,Missing DATABASE_URL
+27,01-crashloop-missing-env,CrashLoopBackOff,Baseline A (Manual kubectl),3,1620,100,High,True,Identified DATABASE_URL error,Missing DATABASE_URL
+28,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Baseline A (Manual kubectl),1,1980,100,High,True,kubectl describe showed FailedPull,Non-existent image tag
+29,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Baseline A (Manual kubectl),2,2520,100,High,True,Found invalid tag in events,Non-existent image tag
+30,02-imagepullbackoff-invalid-tag,ImagePullBackOff,Baseline A (Manual kubectl),3,1800,100,High,True,Verified Docker image not found,Non-existent image tag
+31,03-oomkilled-low-memory,OOMKilled,Baseline A (Manual kubectl),1,2280,80,Medium,True,Last state exit 137,Memory limit exceeded
+32,03-oomkilled-low-memory,OOMKilled,Baseline A (Manual kubectl),2,3300,50,Low,False,Assumed process crashed on startup,Memory limit exceeded
+33,03-oomkilled-low-memory,OOMKilled,Baseline A (Manual kubectl),3,2520,80,Medium,True,Identified memory limit too low,Memory limit exceeded
+34,04-service-selector-mismatch,Selector Mismatch,Baseline A (Manual kubectl),1,2100,40,Low,False,Pods running healthy, assumed network bug,Service selector mismatch
+35,04-service-selector-mismatch,Selector Mismatch,Baseline A (Manual kubectl),2,3060,80,Medium,True,Compared service selector with pod labels,Service selector mismatch
+36,04-service-selector-mismatch,Selector Mismatch,Baseline A (Manual kubectl),3,2400,40,Low,False,Did not check endpoints, escalated,Service selector mismatch
